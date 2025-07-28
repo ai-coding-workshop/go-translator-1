@@ -33,6 +33,11 @@ The project follows a standard Go project layout:
 - `make lint` - Run golangci-lint for static analysis
 - `make install-tools` - Install development tools
 
+### Pre-commit Hooks
+- Install with `pre-commit install`
+- Runs automatically on each commit
+- Includes formatting, linting, and validation checks
+
 ### Dependencies
 - `go mod tidy` - Sync dependencies
 
