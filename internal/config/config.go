@@ -11,11 +11,13 @@ import (
 
 // Config holds application configuration
 type Config struct {
-	ServerPort   string `yaml:"port"`
-	OpenAIKey    string `yaml:"openai_key"`
-	AnthropicKey string `yaml:"anthropic_key"`
-	Debug        bool   `yaml:"debug"`
-	Timeout      int    `yaml:"timeout"`
+	ServerPort        string `yaml:"port"`
+	OpenAIEndpoint    string `yaml:"openai_endpoint"`
+	OpenAIKey         string `yaml:"openai_key"`
+	AnthropicEndpoint string `yaml:"anthropic_endpoint"`
+	AnthropicKey      string `yaml:"anthropic_key"`
+	Debug             bool   `yaml:"debug"`
+	Timeout           int    `yaml:"timeout"`
 }
 
 // NewConfig creates a new configuration from environment variables and config file
@@ -26,11 +28,13 @@ func NewConfig() (*Config, error) {
 
 	// Create default config
 	config := &Config{
-		ServerPort:   "8080",
-		OpenAIKey:    "",
-		AnthropicKey: "",
-		Debug:        false,
-		Timeout:      30,
+		ServerPort:        "8080",
+		OpenAIEndpoint:    "https://api.openai.com/v1",
+		OpenAIKey:         "",
+		AnthropicEndpoint: "https://api.anthropic.com/v1",
+		AnthropicKey:      "",
+		Debug:             false,
+		Timeout:           30,
 	}
 
 	// Load from config file if specified
@@ -58,9 +62,11 @@ func (c *Config) loadFromFile(filename string) error {
 			Port string `yaml:"port"`
 		} `yaml:"server"`
 		LLM struct {
-			OpenAIKey    string `yaml:"openai_key"`
-			AnthropicKey string `yaml:"anthropic_key"`
-			Timeout      int    `yaml:"timeout"`
+			OpenAIEndpoint    string `yaml:"openai_endpoint"`
+			OpenAIKey         string `yaml:"openai_key"`
+			AnthropicEndpoint string `yaml:"anthropic_endpoint"`
+			AnthropicKey      string `yaml:"anthropic_key"`
+			Timeout           int    `yaml:"timeout"`
 		} `yaml:"llm"`
 		Debug bool `yaml:"debug"`
 	}
@@ -73,8 +79,14 @@ func (c *Config) loadFromFile(filename string) error {
 	if fileConfig.Server.Port != "" {
 		c.ServerPort = fileConfig.Server.Port
 	}
+	if fileConfig.LLM.OpenAIEndpoint != "" {
+		c.OpenAIEndpoint = fileConfig.LLM.OpenAIEndpoint
+	}
 	if fileConfig.LLM.OpenAIKey != "" {
 		c.OpenAIKey = fileConfig.LLM.OpenAIKey
+	}
+	if fileConfig.LLM.AnthropicEndpoint != "" {
+		c.AnthropicEndpoint = fileConfig.LLM.AnthropicEndpoint
 	}
 	if fileConfig.LLM.AnthropicKey != "" {
 		c.AnthropicKey = fileConfig.LLM.AnthropicKey
@@ -92,8 +104,14 @@ func (c *Config) loadFromEnv() {
 	if value := os.Getenv("PORT"); value != "" {
 		c.ServerPort = value
 	}
+	if value := os.Getenv("OPENAI_ENDPOINT"); value != "" {
+		c.OpenAIEndpoint = value
+	}
 	if value := os.Getenv("OPENAI_API_KEY"); value != "" {
 		c.OpenAIKey = value
+	}
+	if value := os.Getenv("ANTHROPIC_ENDPOINT"); value != "" {
+		c.AnthropicEndpoint = value
 	}
 	if value := os.Getenv("ANTHROPIC_API_KEY"); value != "" {
 		c.AnthropicKey = value

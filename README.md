@@ -20,7 +20,9 @@ The service can be configured using either environment variables or a YAML confi
 
 #### Environment Variables
 - `PORT` - Server port (default: "8080")
+- `OPENAI_ENDPOINT` - OpenAI API endpoint (default: "https://api.openai.com/v1")
 - `OPENAI_API_KEY` - OpenAI API key for GPT models
+- `ANTHROPIC_ENDPOINT` - Anthropic API endpoint (default: "https://api.anthropic.com/v1")
 - `ANTHROPIC_API_KEY` - Anthropic API key for Claude models
 - `DEBUG` - Enable debug mode (default: false)
 - `TIMEOUT` - Request timeout in seconds (default: 30)
@@ -39,7 +41,9 @@ server:
   port: "8080"
 
 llm:
+  openai_endpoint: "https://idealab.alibaba-inc.com/api/openai/v1"
   openai_key: "your-openai-key"
+  anthropic_endpoint: "https://api.anthropic.com/v1"
   anthropic_key: "your-anthropic-key"
   timeout: 30
 
