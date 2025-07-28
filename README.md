@@ -13,3 +13,14 @@ Refer to [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md) for details on the directo
 3. Start the service with `go run cmd/translator/main.go`
 
 The service will start on http://localhost:8080
+
+## Development
+
+This project includes a Makefile with common development tasks:
+
+- `make format` - Format code with goimports and gofmt
+- `make lint` - Run golangci-lint for static analysis
+- `make build` - Build the application
+- `make run` - Run the application
+- `make clean` - Clean build artifacts
+- `make install-tools` - Install development tools
