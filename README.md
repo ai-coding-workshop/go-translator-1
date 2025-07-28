@@ -2,6 +2,10 @@
 
 A monolithic Go web service that provides English translation using Large Language Models.
 
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
 ## Documentation
 
 - [Project Structure](PROJECT_STRUCTURE.md) - Directory layout and organization
