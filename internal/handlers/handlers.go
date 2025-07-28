@@ -1,9 +1,22 @@
 package handlers
 
 import (
-	"fmt"
+	"html/template"
+	"log"
 	"net/http"
+	"path/filepath"
 )
+
+var (
+	homeTemplate   *template.Template
+	resultTemplate *template.Template
+)
+
+func init() {
+	// Parse templates
+	homeTemplate = template.Must(template.ParseFiles(filepath.Join("web", "templates", "home.html")))
+	resultTemplate = template.Must(template.ParseFiles(filepath.Join("web", "templates", "result.html")))
+}
 
 // HomeHandler serves the main web page
 func HomeHandler(w http.ResponseWriter, r *http.Request) {
@@ -12,35 +25,12 @@ func HomeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Simple response for now, will be replaced with proper HTML template
-	fmt.Fprintf(w, `
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Translation Service</title>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" type="text/css" href="/static/css/style.css">
-</head>
-<body>
-    <h1>Translation Service</h1>
-    <form action="/translate" method="POST">
-        <label for="text">Enter English text to translate:</label><br><br>
-        <textarea id="text" name="text" rows="4" cols="50" placeholder="Enter English word or sentence"></textarea><br><br>
-
-        <label for="model">Select LLM Model:</label>
-        <select id="model" name="model">
-            <option value="gpt-3.5">GPT-3.5</option>
-            <option value="gpt-4">GPT-4</option>
-            <option value="claude">Claude</option>
-            <option value="llama">Llama</option>
-        </select><br><br>
-
-        <input type="submit" value="Translate">
-    </form>
-</body>
-</html>
-`)
+	// Render home template
+	if err := homeTemplate.Execute(w, nil); err != nil {
+		log.Printf("Error rendering home template: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
 }
 
 // TranslateHandler processes translation requests from the web form
@@ -56,24 +46,22 @@ func TranslateHandler(w http.ResponseWriter, r *http.Request) {
 
 	// For now, return a simple response
 	// This will be replaced with actual translation logic
-	fmt.Fprintf(w, `
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Translation Result</title>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" type="text/css" href="/static/css/style.css">
-</head>
-<body>
-    <h1>Translation Result</h1>
-    <p><strong>Original:</strong> %s</p>
-    <p><strong>Model:</strong> %s</p>
-    <p><strong>Translation:</strong> [Translation will appear here]</p>
-    <a href="/">Translate Another</a>
-</body>
-</html>
-`, text, model)
+	data := struct {
+		Original    string
+		Model       string
+		Translation string
+	}{
+		Original:    text,
+		Model:       model,
+		Translation: "[Translation will appear here]",
+	}
+
+	// Render result template
+	if err := resultTemplate.Execute(w, data); err != nil {
+		log.Printf("Error rendering result template: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
 }
 
 // APIHandler handles REST API requests for translation
@@ -86,13 +74,16 @@ func APIHandler(w http.ResponseWriter, r *http.Request) {
 	// For now, return a simple JSON response
 	// This will be replaced with actual translation logic
 	w.Header().Set("Content-Type", "application/json")
-	fmt.Fprintf(w, `{
+	_, err := w.Write([]byte(`{
     "status": "success",
     "message": "API endpoint ready for translation",
+    "translation": "[Translation will appear here]",
     "data": {
         "original": "[text to translate]",
-        "translation": "[translation will appear here]",
         "model": "[selected model]"
     }
-}`)
+}`))
+	if err != nil {
+		log.Printf("Error writing API response: %v", err)
+	}
 }
