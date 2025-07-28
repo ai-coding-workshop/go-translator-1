@@ -3,10 +3,12 @@ package handlers
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"html/template"
 	"log"
 	"net/http"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"translator-service/internal/models"
@@ -61,8 +63,19 @@ func (h *TranslateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get form values
-	text := r.FormValue("text")
-	model := r.FormValue("model")
+	text := strings.TrimSpace(r.FormValue("text"))
+	model := strings.TrimSpace(r.FormValue("model"))
+
+	// Validate input
+	if text == "" {
+		http.Error(w, "Please enter text to translate", http.StatusBadRequest)
+		return
+	}
+
+	if model == "" {
+		http.Error(w, "Please select a translation model", http.StatusBadRequest)
+		return
+	}
 
 	// Create translation request
 	req := &models.TranslationRequest{
@@ -78,7 +91,18 @@ func (h *TranslateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	response, err := h.translatorService.Translate(ctx, req)
 	if err != nil {
 		log.Printf("Translation error: %v", err)
-		http.Error(w, "Translation failed: "+err.Error(), http.StatusInternalServerError)
+		// Provide user-friendly error message
+		if strings.Contains(err.Error(), "validation error") {
+			http.Error(w, fmt.Sprintf("Invalid input: %s", strings.TrimPrefix(err.Error(), "validation error: ")), http.StatusBadRequest)
+		} else if strings.Contains(err.Error(), "unsupported model") {
+			http.Error(w, "Selected translation model is not supported", http.StatusBadRequest)
+		} else if strings.Contains(err.Error(), "context deadline exceeded") {
+			http.Error(w, "Translation request timed out. Please try again.", http.StatusRequestTimeout)
+		} else if strings.Contains(err.Error(), "context canceled") {
+			http.Error(w, "Translation request was canceled", http.StatusBadRequest)
+		} else {
+			http.Error(w, "Translation service temporarily unavailable. Please try again in a moment.", http.StatusServiceUnavailable)
+		}
 		return
 	}
 
@@ -116,6 +140,10 @@ func (h *APIHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Trim whitespace
+	req.Text = strings.TrimSpace(req.Text)
+	req.Model = strings.TrimSpace(req.Model)
+
 	// Validate request
 	if req.Text == "" {
 		http.Error(w, "Text field is required", http.StatusBadRequest)
@@ -135,7 +163,18 @@ func (h *APIHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	response, err := h.translatorService.Translate(ctx, &req)
 	if err != nil {
 		log.Printf("Translation error: %v", err)
-		http.Error(w, "Translation failed: "+err.Error(), http.StatusInternalServerError)
+		// Provide structured error response
+		errorResponse := map[string]interface{}{
+			"error":   true,
+			"message": h.getErrorMessage(err),
+			"details": err.Error(),
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(h.getErrorCode(err))
+		if err := json.NewEncoder(w).Encode(errorResponse); err != nil {
+			log.Printf("Error encoding JSON error response: %v", err)
+		}
 		return
 	}
 
@@ -145,5 +184,35 @@ func (h *APIHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Error encoding JSON response: %v", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
+	}
+}
+
+// getErrorMessage returns a user-friendly error message based on the error
+func (h *APIHandler) getErrorMessage(err error) string {
+	if strings.Contains(err.Error(), "validation error") {
+		return fmt.Sprintf("Invalid input: %s", strings.TrimPrefix(err.Error(), "validation error: "))
+	} else if strings.Contains(err.Error(), "unsupported model") {
+		return "Selected translation model is not supported"
+	} else if strings.Contains(err.Error(), "context deadline exceeded") {
+		return "Translation request timed out"
+	} else if strings.Contains(err.Error(), "context canceled") {
+		return "Translation request was canceled"
+	} else {
+		return "Translation service temporarily unavailable"
+	}
+}
+
+// getErrorCode returns an appropriate HTTP status code based on the error
+func (h *APIHandler) getErrorCode(err error) int {
+	if strings.Contains(err.Error(), "validation error") {
+		return http.StatusBadRequest
+	} else if strings.Contains(err.Error(), "unsupported model") {
+		return http.StatusBadRequest
+	} else if strings.Contains(err.Error(), "context deadline exceeded") {
+		return http.StatusRequestTimeout
+	} else if strings.Contains(err.Error(), "context canceled") {
+		return http.StatusBadRequest
+	} else {
+		return http.StatusServiceUnavailable
 	}
 }

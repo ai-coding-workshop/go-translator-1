@@ -19,8 +19,8 @@ func main() {
 		log.Fatalf("Failed to load configuration: %v", err)
 	}
 
-	// Create translator service
-	translatorService := services.NewTranslatorService()
+	// Create translator service with configuration
+	translatorService := services.NewTranslatorService(cfg)
 
 	// Create handlers with dependencies
 	homeHandler := handlers.NewHomeHandler()
