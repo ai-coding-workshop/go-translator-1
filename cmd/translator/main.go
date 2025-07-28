@@ -4,32 +4,38 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 
+	"translator-service/internal/config"
 	"translator-service/internal/handlers"
+	"translator-service/internal/services"
 )
 
 func main() {
 	fmt.Println("Translation Service Starting...")
 
+	// Load configuration
+	cfg := config.NewConfig()
+
+	// Create translator service
+	translatorService := services.NewTranslatorService()
+
+	// Create handlers with dependencies
+	homeHandler := handlers.NewHomeHandler()
+	translateHandler := handlers.NewTranslateHandler(translatorService)
+	apiHandler := handlers.NewAPIHandler(translatorService)
+
 	// Create a new serve mux for routing
 	mux := http.NewServeMux()
 
 	// Register routes
-	mux.HandleFunc("/", handlers.HomeHandler)
-	mux.HandleFunc("/translate", handlers.TranslateHandler)
-	mux.HandleFunc("/api/translate", handlers.APIHandler)
+	mux.HandleFunc("/", homeHandler)
+	mux.HandleFunc("/translate", translateHandler)
+	mux.HandleFunc("/api/translate", apiHandler)
 
 	// Serve static files
 	fs := http.FileServer(http.Dir("./web/static/"))
 	mux.Handle("/static/", http.StripPrefix("/static/", fs))
 
-	// Get port from environment variable or default to 8080
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
-	}
-
-	log.Printf("Server starting on port %s", port)
-	log.Fatal(http.ListenAndServe(":"+port, mux))
+	log.Printf("Server starting on port %s", cfg.ServerPort)
+	log.Fatal(http.ListenAndServe(":"+cfg.ServerPort, mux))
 }
