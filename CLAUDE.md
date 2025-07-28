@@ -2,6 +2,10 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
 ## Project Overview
 
 This is a monolithic Go web service that provides English translation using Large Language Models. The service allows users to input English words or sentences and get translations from multiple selectable LLMs.

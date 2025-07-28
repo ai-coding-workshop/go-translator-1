@@ -14,13 +14,16 @@ func main() {
 	fmt.Println("Translation Service Starting...")
 
 	// Load configuration
-	cfg := config.NewConfig()
+	cfg, err := config.NewConfig()
+	if err != nil {
+		log.Fatalf("Failed to load configuration: %v", err)
+	}
 
-	// Create translator service
-	translatorService := services.NewTranslatorService()
+	// Create translator service with configuration
+	translatorService := services.NewTranslatorService(cfg)
 
 	// Create handlers with dependencies
-	homeHandler := handlers.NewHomeHandler()
+	homeHandler := handlers.NewHomeHandler(translatorService)
 	translateHandler := handlers.NewTranslateHandler(translatorService)
 	apiHandler := handlers.NewAPIHandler(translatorService)
 

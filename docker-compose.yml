@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  translator:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      # Uncomment and set your API keys when running in production
+      # - OPENAI_API_KEY=your-openai-api-key
+      # - ANTHROPIC_API_KEY=your-anthropic-api-key
+    volumes:
+      # Mount config file if you want to use a custom configuration
+      # - ./config.yaml:/app/config.yaml
+    restart: unless-stopped
