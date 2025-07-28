@@ -14,7 +14,10 @@ func main() {
 	fmt.Println("Translation Service Starting...")
 
 	// Load configuration
-	cfg := config.NewConfig()
+	cfg, err := config.NewConfig()
+	if err != nil {
+		log.Fatalf("Failed to load configuration: %v", err)
+	}
 
 	// Create translator service
 	translatorService := services.NewTranslatorService()

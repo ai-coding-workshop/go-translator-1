@@ -14,6 +14,40 @@ Refer to [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md) for details on the directo
 
 The service will start on http://localhost:8080
 
+### Configuration
+
+The service can be configured using either environment variables or a YAML configuration file.
+
+#### Environment Variables
+- `PORT` - Server port (default: "8080")
+- `OPENAI_API_KEY` - OpenAI API key for GPT models
+- `ANTHROPIC_API_KEY` - Anthropic API key for Claude models
+- `DEBUG` - Enable debug mode (default: false)
+- `TIMEOUT` - Request timeout in seconds (default: 30)
+
+#### YAML Configuration File
+You can also use a YAML configuration file:
+
+```bash
+go run cmd/translator/main.go -config=config.yaml
+```
+
+Example config.yaml:
+```yaml
+# Translation Service Configuration
+server:
+  port: "8080"
+
+llm:
+  openai_key: "your-openai-key"
+  anthropic_key: "your-anthropic-key"
+  timeout: 30
+
+debug: false
+```
+
+Environment variables will override values from the configuration file.
+
 ## Development
 
 This project includes a Makefile with common development tasks:
